@@ -1,0 +1,37 @@
+# Render Blueprint — one-click deploy of GuardSQL MCP plus a free Postgres.
+# Docs: https://render.com/docs/blueprint-spec
+#
+# Deploy: Render Dashboard -> New -> Blueprint -> pick this repo -> Apply.
+
+databases:
+  - name: guardsql-db
+    databaseName: guardsql
+    user: guardsql
+    plan: free
+
+services:
+  - type: web
+    name: guardsql-mcp
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: guardsql-db
+          property: connectionString
+      - key: GUARDSQL_CONFIG
+        value: /app/config/guardsql.yaml
+      # Populate the fresh database with the demo e-commerce schema + seed on boot.
+      - key: AUTO_INIT_DB
+        value: "true"
+      # Published demo tokens so anyone can exercise the read path right away.
+      - key: DEMO_READONLY_TOKEN
+        value: demo-readonly-7f3a9c2e
+      - key: DEMO_OPS_TOKEN
+        value: demo-ops-2b8e14d6
+      # The admin token (write approvals) is generated and stays private.
+      - key: ADMIN_TOKEN
+        generateValue: true

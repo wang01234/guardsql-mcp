@@ -1,0 +1,38 @@
+# GuardSQL MCP server configuration.
+# Values written as ${ENV_VAR} are interpolated from the process environment at load time.
+
+server:
+  name: guardsql-mcp
+  version: 0.1.0
+  port: 8787
+
+database:
+  # Hard ceiling on rows returned by any read tool unless the token asks for less.
+  maxRows: 500
+  # Per-statement timeout enforced by PostgreSQL.
+  statementTimeoutMs: 5000
+
+audit:
+  file: ./audit.log
+
+# Every bearer token maps to exactly one scope (RBAC).
+tokens:
+  - id: demo-readonly
+    token: ${DEMO_READONLY_TOKEN}
+    tables: [customers, products, orders, order_items, payments]
+    allowWrite: false
+    maxRows: 100
+
+  - id: demo-ops
+    token: ${DEMO_OPS_TOKEN}
+    tables: [orders, order_items, payments]
+    allowWrite: true
+    maxRows: 500
+
+  - id: admin
+    token: ${ADMIN_TOKEN}
+    tables: ["*"]
+    allowWrite: true
+    maxRows: 500
+    allowAuditRead: true
+    isAdmin: true
